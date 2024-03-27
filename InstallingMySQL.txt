@@ -1,0 +1,16 @@
+Prerequisite:
+Installing Docker: https://docs.docker.com/desktop/mac/install/
+
+
+Installing MySQL
+https://hub.docker.com/r/mysql/mysql-server
+
+shell> docker pull mysql/mysql-server:5.7
+shell> docker run --name=mysql_debezium -p 3306:3306 -d mysql/mysql-server:5.7
+shell> docker ps
+shell> docker logs mysql_debezium 2>&1 | grep GENERATED
+GENERATED ROOT PASSWORD: <password>
+shell> docker exec -it mysql_debezium mysql -uroot -p
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+mysql> CREATE USER 'root'@'%' IDENTIFIED BY 'password';
+mysql> GRANT ALL ON *.* TO 'root'@'%';

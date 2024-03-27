@@ -1,0 +1,39 @@
+http://confluent.io
+
+mkdir confluent
+cd confluent
+mv ../confluent-7.1.1.tar .
+
+tar -xvzf confluent-7.1.1.tar
+
+cd confluent-7.1.1
+
+Get present working directory:
+pwd
+
+vi ~/.bash_profile
+------------------
+export CONFLUENT_HOME=/Users/johnd/Downloads/confluent/confluent-7.1.1
+export PATH=$PATH:$CONFLUENT_HOME/bin
+------------------
+
+source ~/.bash_profile
+
+vi etc/kafka/server.properties
+------------------
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
+------------------
+
+Check confluent services:
+confluent local services status
+
+Start Confluent Kafka:
+confluent local services kafka start
+
+Stopping all confluent services:
+confluent local services stop
+
+Stop only Confluent Kafka service:
+confluent local services kafka stop

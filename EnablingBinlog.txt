@@ -1,0 +1,26 @@
+Checking if binary logs are available:
+// for some versions of MySql
+mysql> SELECT variable_value as "BINARY LOGGING STATUS (log-bin) ::"
+FROM information_schema.global_variables WHERE variable_name='log_bin';
+// for some other versions of MySQL
+mysql> SELECT variable_value as "BINARY LOGGING STATUS (log-bin) ::"
+FROM performance_schema.global_variables WHERE variable_name='log_bin';
+
+Yet another command for checking:
+show binary logs;
+
+If binary logs are not ON:
+docker exec -it mysql_debezium /bin/bash
+> yum install vim (OR > apt-get install vim)
+> vim etc/my.cnf
+-----------------
+server-id         = 223344
+log_bin           = mysql-bin
+binlog_format     = ROW
+binlog_row_image  = FULL
+expire_logs_days  = 10
+-----------------
+
+docker restart mysql_debezium
+docker ps
+docker exec -it mysql_debezium mysql -uroot -p

@@ -1,0 +1,11 @@
+Get different confluent services:
+confluent local services --help
+
+Starting schema registry:
+confluent local services schema-registry start
+
+Check status of confluent services:
+confluent local services status
+
+CURL request for checking Schema Registry
+curl -XGET http://localhost:8081

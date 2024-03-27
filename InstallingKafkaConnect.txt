@@ -1,0 +1,44 @@
+Installing Kafka Connect:
+#When inside CONFLUENT_HOME folder:
+cd bin
+./connect-distributed ../etc/kafka/connect-distributed.properties
+
+Check the Kafka Connect process status:
+curl -XGET http://localhost:8083
+
+To install "jq" for pretty printing:
+pip3 install jq
+
+curl -XGET http://localhost:8083 | jq
+
+Check the available connector plugins: 
+curl -XGET http://localhost:8083/connector-plugins | jq
+
+Installing Debezium MySQL Connector:
+Go to https://debezium.io/
+Download latest Debezium MySQL connector.
+
+#When inside CONFLUENT_HOME folder:
+mkdir connectors
+cd connectors
+cp ~/Downloads/debezium-connector-mysql-1.9.2.Final-plugin.tar.gz .
+
+tar -xvzf debezium-connector-mysql-1.9.2.Final-plugin.tar.gz
+
+rm debezium-connector-mysql-1.9.2.Final-plugin.tar.gz
+
+Make an entry of the path of connectors into etc/kafka/connect-distributed.properties
+pwd
+> /Users/johnd/Downloads/confluent/confluent-7.1.1/connectors
+
+cd ..
+vi etc/kafka/connect-distributed.properties
+---------------------
+plugin.path=/usr/share/java,/Users/johnd/Downloads/confluent/confluent-7.1.1/connectors
+---------------------
+
+Start Kafka Connect again:
+#When inside CONFLUENT_HOME folder:
+cd bin
+./connect-distributed ../etc/kafka/connect-distributed.properties
+
