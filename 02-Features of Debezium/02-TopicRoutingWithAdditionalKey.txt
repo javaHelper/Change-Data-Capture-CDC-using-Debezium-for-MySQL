@@ -1,0 +1,51 @@
+Additional properties:
+transforms=Reroute
+transforms.Reroute.type=io.debezium.transforms.ByLogicalTableRouter
+transforms.Reroute.topic.regex=(.*)users_shard(.*)
+transforms.Reroute.topic.replacement=$1users_all_shards_key_based
+
+transforms.Reroute.key.field.name=shard_id
+transforms.Reroute.key.field.regex=(.*)users_shard(.*)
+transforms.Reroute.key.field.replacement=$2
+
+
+Listing kafka topics:
+bin/kafka-topics --list --bootstrap-server localhost:9092
+
+Kafka Avro Console consumer:
+bin/kafka-avro-console-consumer --bootstrap-server localhost:9092 -topic mysql1.debezium_test.users_all_shards_key_based --from-beginning --property schema.registry.url=http://localhost:8081 --property print.key=true --property key.separator="-"
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://localhost:8083/connectors/ -d '
+{
+	"name":"debezium-connector-user1",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "localhost",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10101",
+		"database.server.name": "mysql1",
+		"database.include.list": "debezium_test",
+		"database.history.kafka.bootstrap.servers": "localhost:9092", 
+		"database.history.kafka.topic": "dbhistory.user1",
+		"transforms": "Reroute",
+		"transforms.Reroute.type": "io.debezium.transforms.ByLogicalTableRouter",
+		"transforms.Reroute.topic.regex": "(.*)users_shard(.*)",
+		"transforms.Reroute.topic.replacement": "$1users_all_shards_key_based",
+		"transforms.Reroute.key.field.name": "shard_id",
+		"transforms.Reroute.key.field.regex": "(.*)users_shard(.*)",
+		"transforms.Reroute.key.field.replacement": "$2",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://localhost:8081",
+		"value.converter.schema.registry.url": "http://localhost:8081"
+	}
+}'
+
+
+insert into users_shard1(user_id, first_name, last_name, city, state, pincode) values (1, "John", "Doe", "Seattle", "Washington", "98109");
+insert into users_shard2(user_id, first_name, last_name, city, state, pincode) values (2, "Tom", "Hawkins", "Houston", "Texas", "77001");
+insert into users_shard1(user_id, first_name, last_name, city, state, pincode) values (3, "Rita", "Thomas", "Austin", "Texas", "73301");
+insert into users_shard2(user_id, first_name, last_name, city, state, pincode) values (4, "Rocky", "Singh", "Seattle", "Washington", "98100");

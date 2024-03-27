@@ -1,0 +1,26 @@
+Reference: https://docs.confluent.io/platform/current/schema-registry/develop/api.html
+
+curl -XGET http://localhost:8081/schemas
+-> Gives you all the schemas that are present
+
+curl -XGET http://localhost:8081/schemas/types
+-> Possible schema types
+
+curl -XGET http://localhost:8081/subjects
+-> Lists all subjects
+
+curl -XGET http://localhost:8081/subjects/<subject>/versions
+-> All versions for a particular subject
+
+curl -XGET http://localhost:8081/subjects/<subject>/versions/<version>
+-> Schema for a particular subject and version
+
+curl -XGET http://localhost:8081/subjects/<subject>/versions/latest
+-> Schema for a particular subject's latest version
+
+curl -XGET http://localhost:8081/schemas/ids/<id>
+-> Getting a schema with id known
+
+curl -XGET http://localhost:8081/subjects/<subject>/versions/<version>/schema
+-> Getting the schema in json format
+

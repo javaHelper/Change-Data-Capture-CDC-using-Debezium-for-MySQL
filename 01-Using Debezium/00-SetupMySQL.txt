@@ -1,0 +1,25 @@
+docker exec -it mysql_debezium mysql -uroot -p
+
+Create a database:
+create database debezium_demo;
+
+use debezium_demo;
+
+Create a table "user":
+create table user (
+    user_id int primary key,
+    first_name varchar(50),
+    last_name varchar(50),
+    city varchar(50),
+    state varchar(50),
+    pincode varchar(10)
+);
+
+Describe table "user":
+desc user;
+
+Insert a row into "user" table:
+insert into user values (1, "John", "Doe", "Seattle", "Washington", "98101");
+
+Show rows from table:
+select * from user;

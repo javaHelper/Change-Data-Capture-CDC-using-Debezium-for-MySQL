@@ -1,0 +1,82 @@
+To install jq: sudo yum install jq
+
+In confluent-7.3.1/etc/kafka/connect-distributed.properties, following changes are required:
+1. bootstrap.servers=<kafka-server>:9092
+2. group.id=<some-group-id> (Should be same across all kafka connect servers in the cluster)
+3. listeners=HTTP://0.0.0.0:8083
+4. rest.advertised.host.name=<public-host-name-of-the-same-server>
+5. In plugin.path, add "/home/ec2-user/confluent-7.3.1/connectors"
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://ec2-13-229-69-14.ap-southeast-1.compute.amazonaws.com:8083/connectors/ -d '
+{
+	"name":"debezium-connector-ecommerce",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "ec2-54-179-5-227.ap-southeast-1.compute.amazonaws.com",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10101",
+		"database.server.name": "mysql-ecommerce",
+		"database.include.list": "ecommerce",
+		"table.include.list": "customers",
+		"database.history.kafka.bootstrap.servers": "ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:9092", 
+		"database.history.kafka.topic": "dbhistory.ecommerce",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081",
+		"value.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081"
+	}
+}'
+
+curl 'http://ec2-13-229-69-14.ap-southeast-1.compute.amazonaws.com:8083/connectors?expand=status'
+
+curl 'http://ec2-18-143-64-36.ap-southeast-1.compute.amazonaws.com:8083/connectors?expand=status'
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://ec2-13-229-69-14.ap-southeast-1.compute.amazonaws.com:8083/connectors/ -d '
+{
+	"name":"debezium-connector-inventory",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "ec2-54-179-5-227.ap-southeast-1.compute.amazonaws.com",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10102",
+		"database.server.name": "mysql-inventory",
+		"database.include.list": "inventory",
+		"table.include.list": "products",
+		"database.history.kafka.bootstrap.servers": "ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:9092", 
+		"database.history.kafka.topic": "dbhistory.inventory",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081",
+		"value.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081"
+	}
+}'
+
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://ec2-13-229-69-14.ap-southeast-1.compute.amazonaws.com:8083/connectors/ -d '
+{
+	"name":"debezium-connector-complaints",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "ec2-54-179-5-227.ap-southeast-1.compute.amazonaws.com",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10103",
+		"database.server.name": "mysql-complaints",
+		"database.include.list": "complaints",
+		"table.include.list": "complaint_register",
+		"database.history.kafka.bootstrap.servers": "ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:9092", 
+		"database.history.kafka.topic": "dbhistory.complaints",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081",
+		"value.converter.schema.registry.url": "http://ec2-54-169-38-141.ap-southeast-1.compute.amazonaws.com:8081"
+	}
+}'

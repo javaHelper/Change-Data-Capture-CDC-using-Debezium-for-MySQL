@@ -1,0 +1,7 @@
+Ensure CONFLUENT_HOME is set, and CONFLUENT_HOME/bin is part of PATH.
+
+kafka-topics --list --bootstrap-server localhost:9092
+
+kafka-console-consumer --bootstrap-server localhost:9092 -topic mysql1.debezium_demo.user --from-beginning [DOES NOT WORK]
+
+kafka-avro-console-consumer --bootstrap-server localhost:9092 -topic mysql1.debezium_demo.user --from-beginning --property schema.registry.url=http://localhost:8081

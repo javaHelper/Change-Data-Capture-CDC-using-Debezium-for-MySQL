@@ -1,0 +1,56 @@
+List of kafka topics created:
+kafka-topics --list --bootstrap-server localhost:9092
+-----------------------------------
+create database debezium_test;
+
+use debezium_test;
+
+create table person (
+    person_id int primary key,
+    first_name varchar(50),
+    last_name varchar(50),
+    city varchar(50),
+    state varchar(50),
+    pincode varchar(10)
+);
+
+insert into person values (1, "John", "Doe", "Seattle", "Washington", "98101");
+------------------------------------
+Getting connector info:
+curl -XGET http://localhost:8083/connectors | jq
+curl -XGET http://localhost:8083/connectors/debezium-demo-connnector | jq
+
+Deleting connector
+curl -XDELETE http://localhost:8083/connectors/debezium-demo-connector
+
+Recreating connector:
+$ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://localhost:8083/connectors/ -d '
+{
+  "name": "debezium-demo-connector",  
+  "config": {  
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",  
+    "database.hostname": "localhost",  
+    "database.port": "3306",
+    "database.user": "root",
+    "database.password": "root",
+    "database.server.id": "10101",  
+    "database.server.name": "mysql1",  
+    "database.include.list": "debezium_demo,debezium_test",  
+    "database.history.kafka.bootstrap.servers": "localhost:9092",  
+    "database.history.kafka.topic": "schema-changes.debezium_demo",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://localhost:8081",
+    "value.converter.schema.registry.url": "http://localhost:8081"
+  }
+}'
+
+-------------------------
+Possible configurations:
+database.include.list
+database.exclude.list
+table.include.list
+table.exclude.list
+column.include.list
+column.exclude.list

@@ -1,0 +1,57 @@
+docker exec -it mysql_debezium mysql -u root -p  
+
+create database if not exists test_signals;
+
+create table signal_debezium (
+	id varchar(42) primary key,
+	type varchar(32) not null,
+	data varchar(200) null
+);
+
+create table users(
+    user_id int primary key,
+    first_name varchar(50),
+    last_name varchar(50),
+    city varchar(50),
+    state varchar(50),
+    pincode varchar(10)
+);
+
+bin/kafka-topics --list --bootstrap-server localhost:9092
+
+bin/kafka-avro-console-consumer --bootstrap-server localhost:9092 -topic mysql3.test_signals.users --from-beginning --property schema.registry.url=http://localhost:8081
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://localhost:8083/connectors/ -d '
+{
+	"name":"debezium-connector-testsignals",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "localhost",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10103",
+		"database.server.name": "mysql3",
+		"database.include.list": "test_signals",
+		"table.include.list": "test_signals.users,test_signals.signal_debezium",
+		"signal.data.collection": "test_signals.signal_debezium",
+		"database.history.kafka.bootstrap.servers": "localhost:9092", 
+		"database.history.kafka.topic": "dbhistory.testsignals",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://localhost:8081",
+		"value.converter.schema.registry.url": "http://localhost:8081"
+	}
+}'
+
+
+insert into users(user_id, first_name, last_name, city, state, pincode) values (1, "John", "Doe", "Seattle", "Washington", "98109");
+insert into users(user_id, first_name, last_name, city, state, pincode) values (2, "Tom", "Hawkins", "Houston", "Texas", "77001");
+insert into users(user_id, first_name, last_name, city, state, pincode) values (3, "Rita", "Thomas", "Austin", "Texas", "73301");
+insert into users(user_id, first_name, last_name, city, state, pincode) values (4, "Rocky", "Singh", "Seattle", "Washington", "98100");
+
+insert into signal_debezium(id, type, data) values ('1', 'log', '{"message": "Hello World!!!"}');
+insert into signal_debezium(id, type, data) values ('2', 'log', '{"message": "Signal message at offset {}"}');
+insert into signal_debezium(id, type, data) values ('3', 'execute-snapshot', '{"data-collections": ["test_signals.users"]}');
+insert into signal_debezium(id, type, data) values ('6', 'execute-snapshot', '{"data-collections": ["test_signals.users"], "type": "incremental"}');

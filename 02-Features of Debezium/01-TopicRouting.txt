@@ -1,0 +1,69 @@
+docker exec -it mysql_debezium mysql -u root -p
+create database if not exists debezium_test;
+use debezium_test;
+
+create table users_shard1 (
+	user_id int primary key,
+	first_name varchar(50),
+	last_name varchar(50),
+	city varchar(50),
+	state varchar(50),
+	pincode varchar(10)
+);
+
+create table users_shard2 (
+	user_id int primary key,
+	first_name varchar(50),
+	last_name varchar(50),
+	city varchar(50),
+	state varchar(50),
+	pincode varchar(10)
+);
+
+With no special change, the changes in these 2 tables will be routed to:
+mysql1.debezium_test.users_shard1 and mysql1.debezium_test.users_shard2 respectively.
+
+Additional properties:
+transforms=Reroute
+transforms.Reroute.type=io.debezium.transforms.ByLogicalTableRouter
+transforms.Reroute.topic.regex=(.*)users_shard(.*)
+transforms.Reroute.topic.replacement=$1users_all_shards
+
+
+Listing kafka topics:
+bin/kafka-topics --list --bootstrap-server localhost:9092
+
+Kafka Avro Console consumer:
+kafka-avro-console-consumer --bootstrap-server localhost:9092 -topic mysql1.debezium_test.users_all_shards --from-beginning --property schema.registry.url=http://localhost:8081 --property print.key=true --property key.separator="-"
+
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" http://localhost:8083/connectors/ -d '
+{
+	"name":"debezium-connector-user",
+	"config": {
+		"connector.class": "io.debezium.connector.mysql.MySqlConnector",
+		"tasks.max": "1",
+		"database.hostname": "localhost",
+		"database.port": "3306",
+		"database.user": "root",
+		"database.password": "password",
+		"database.server.id": "10101",
+		"database.server.name": "mysql1",
+		"database.include.list": "debezium_test",
+		"database.history.kafka.bootstrap.servers": "localhost:9092", 
+		"database.history.kafka.topic": "dbhistory.user",
+		"transforms": "Reroute",
+		"transforms.Reroute.type": "io.debezium.transforms.ByLogicalTableRouter",
+		"transforms.Reroute.topic.regex": "(.*)users_shard(.*)",
+		"transforms.Reroute.topic.replacement": "$1users_all_shards",
+		"key.converter": "io.confluent.connect.avro.AvroConverter",
+		"value.converter": "io.confluent.connect.avro.AvroConverter",
+		"key.converter.schema.registry.url": "http://localhost:8081",
+		"value.converter.schema.registry.url": "http://localhost:8081"
+	}
+}'
+
+
+insert into users_shard1(user_id, first_name, last_name, city, state, pincode) values (1, "John", "Doe", "Seattle", "Washington", "98109");
+insert into users_shard2(user_id, first_name, last_name, city, state, pincode) values (2, "Tom", "Hawkins", "Houston", "Texas", "77001");
+insert into users_shard1(user_id, first_name, last_name, city, state, pincode) values (3, "Rita", "Thomas", "Austin", "Texas", "73301");
+insert into users_shard2(user_id, first_name, last_name, city, state, pincode) values (4, "Rocky", "Singh", "Seattle", "Washington", "98100");
